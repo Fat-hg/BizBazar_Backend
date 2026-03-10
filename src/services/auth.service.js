@@ -1,8 +1,9 @@
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { generateToken } = require('../utils/jwt.utils');
 
 const authService = {
-    
+
     async login(email, password) {
         const result = await pool.query(
             'SELECT id, nombre, email, password_hash, activo FROM usuarios WHERE email = $1',
@@ -29,10 +30,20 @@ const authService = {
             throw error;
         }
 
-        return {
+        // Generar JWT
+        const token = generateToken({
             id: user.id,
-            nombre: user.nombre,
             email: user.email,
+            nombre: user.nombre
+        });
+
+        return {
+            usuario: {
+                id: user.id,
+                nombre: user.nombre,
+                email: user.email,
+            },
+            token
         };
     },
 };

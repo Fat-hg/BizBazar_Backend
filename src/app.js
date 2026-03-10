@@ -30,14 +30,18 @@ app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'BizBazar API funcionando correctamente', timestamp: new Date().toISOString() });
 });
 
+const authMiddleware = require('./middlewares/auth.middleware');
+
 // Montar rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/lotes', lotesRoutes);
-app.use('/api/productos', productosRoutes);
-app.use('/api/ventas', ventasRoutes);
-app.use('/api/subastas', subastasRoutes);
-app.use('/api/reportes', reportesRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/auth', authRoutes); // Rutas públicas (login)
+
+// Rutas protegidas
+app.use('/api/lotes', authMiddleware, lotesRoutes);
+app.use('/api/productos', authMiddleware, productosRoutes);
+app.use('/api/ventas', authMiddleware, ventasRoutes);
+app.use('/api/subastas', authMiddleware, subastasRoutes);
+app.use('/api/reportes', authMiddleware, reportesRoutes);
+app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 
 // Ruta para uploads (mock de Cloudinary)
 app.post('/api/uploads', (req, res) => {
