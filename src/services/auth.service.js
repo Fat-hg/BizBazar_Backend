@@ -46,6 +46,40 @@ const authService = {
             token
         };
     },
+
+    async register(nombre, email, password) {
+        // Verificar si el usuario ya existe
+        const userExists = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
+        if (userExists.rows.length > 0) {
+            const error = new Error('El correo electrónico ya está registrado');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        // Hashear la contraseña
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        // Guardar en la base de datos
+        const result = await pool.query(
+            'INSERT INTO usuarios (nombre, email, password_hash, activo, rol) VALUES ($1, $2, $3, true, $4) RETURNING id, nombre, email',
+            [nombre, email, passwordHash, 'vendedor'] // Asumimos rol básico inicial
+        );
+
+        const newUser = result.rows[0];
+
+        // Generar JWT
+        const token = generateToken({
+            id: newUser.id,
+            email: newUser.email,
+            nombre: newUser.nombre
+        });
+
+        return {
+            usuario: newUser,
+            token
+        };
+    },
 };
 
 module.exports = authService;
