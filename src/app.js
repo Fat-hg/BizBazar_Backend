@@ -43,11 +43,27 @@ app.use('/api/subastas', authMiddleware, subastasRoutes);
 app.use('/api/reportes', authMiddleware, reportesRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 
-// Ruta para uploads (mock de Cloudinary)
-app.post('/api/uploads', (req, res) => {
-    const cloudinaryService = require('./services/cloudinary.service');
-    const result = cloudinaryService.mockUpload(req.body);
-    res.status(201).json({ success: true, data: result });
+// Ruta para uploads de imágenes usando Multer y Cloudinary
+const uploadMiddleware = require('./middlewares/upload.middleware');
+app.post('/api/uploads', authMiddleware, uploadMiddleware.single('imagen'), async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No se subió ninguna imagen.' });
+        }
+
+        const cloudinaryService = require('./services/cloudinary.service');
+        const result = await cloudinaryService.uploadImage(req.file.buffer);
+
+        res.status(201).json({
+            success: true,
+            data: {
+                url: result.secure_url,
+                public_id: result.public_id
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
 });
 
 // Ruta base /api
