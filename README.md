@@ -34,7 +34,7 @@ Editar el archivo `.env` con los datos de tu base de datos PostgreSQL:
 PORT=3001
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=bizbazar
+DB_NAME=name_basededatos
 DB_USER=postgres
 DB_PASSWORD=tu_password_aqui
 ```
