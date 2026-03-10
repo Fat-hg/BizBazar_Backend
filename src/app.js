@@ -11,6 +11,8 @@ const ventasRoutes = require('./routes/ventas.routes');
 const subastasRoutes = require('./routes/subastas.routes');
 const reportesRoutes = require('./routes/reportes.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const joyeriaRoutes = require('./routes/joyeria.routes');
+const configuracionRoutes = require('./routes/configuracion.routes');
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use('/api/ventas', authMiddleware, ventasRoutes);
 app.use('/api/subastas', authMiddleware, subastasRoutes);
 app.use('/api/reportes', authMiddleware, reportesRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/joyeria', authMiddleware, joyeriaRoutes);
+app.use('/api/configuracion', authMiddleware, configuracionRoutes);
 
 // Ruta para uploads de imágenes usando Multer y Cloudinary
 const uploadMiddleware = require('./middlewares/upload.middleware');
