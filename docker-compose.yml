@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: bizbazar_backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=bizbazar
+      - DB_USER=postgres
+      - DB_PASSWORD=bizbazar_db_password
+      - JWT_SECRET=super_secret_bizbazar_local_key_2024
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      db:
+        condition: service_started
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+
+  db:
+    image: postgres:15-alpine
+    container_name: bizbazar_database
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=bizbazar_db_password
+      - POSTGRES_DB=bizbazar
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
