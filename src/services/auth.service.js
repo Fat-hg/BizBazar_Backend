@@ -62,8 +62,8 @@ const authService = {
 
         // Guardar en la base de datos
         const result = await pool.query(
-            'INSERT INTO usuarios (nombre, email, password_hash, activo, rol) VALUES ($1, $2, $3, true, $4) RETURNING id, nombre, email',
-            [nombre, email, passwordHash, 'vendedor'] // Asumimos rol básico inicial
+            'INSERT INTO usuarios (nombre, email, password_hash, activo) VALUES ($1, $2, $3, true) RETURNING id, nombre, email',
+            [nombre, email, passwordHash]
         );
 
         const newUser = result.rows[0];
