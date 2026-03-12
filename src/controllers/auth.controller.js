@@ -12,11 +12,12 @@ const authController = {
                 });
             }
 
-            const user = await authService.login(email, password);
+            const { usuario, token } = await authService.login(email, password);
 
             res.json({
                 success: true,
-                user,
+                usuario,
+                token
             });
         } catch (error) {
             next(error);
@@ -41,11 +42,12 @@ const authController = {
                 });
             }
 
-            const newUser = await authService.register(nombre, email, password);
+            const { usuario, token } = await authService.register(nombre, email, password);
 
             res.status(201).json({
                 success: true,
-                user: newUser,
+                usuario,
+                token
             });
         } catch (error) {
             next(error);

@@ -15,5 +15,6 @@ router.get('/', productosController.getAll);
 router.post('/', productosController.create);
 router.get('/:id', productosController.getById);
 router.put('/:id', productosController.update);
+router.delete('/:id', productosController.delete);
 
 module.exports = router;

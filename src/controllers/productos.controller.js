@@ -46,6 +46,15 @@ const productosController = {
             next(error);
         }
     },
+
+    async delete(req, res, next) {
+        try {
+            await productosService.delete(req.params.id);
+            res.json({ success: true, message: 'Producto eliminado exitosamente' });
+        } catch (error) {
+            next(error);
+        }
+    },
 };
 
 module.exports = productosController;

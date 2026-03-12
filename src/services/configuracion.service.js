@@ -14,7 +14,7 @@ const configuracionService = {
     },
 
     async updateNegocio(data) {
-        const negocio = await this.getNegocio(); // Asegurar que exista
+        const negocio = await configuracionService.getNegocio(); // Asegurar que exista
 
         const allowedFields = ['nombre', 'telefono', 'email_contacto', 'direccion', 'moneda', 'incremento_minimo_subasta', 'formato_codigo'];
         const fields = [];
@@ -39,6 +39,45 @@ const configuracionService = {
         );
 
         return result.rows[0];
+    },
+
+    async ensureCategoriasTable() {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS categorias (
+                id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                tipo VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+    },
+
+    async getCategorias(tipo) {
+        await configuracionService.ensureCategoriasTable();
+        let query = 'SELECT * FROM categorias';
+        let params = [];
+        if (tipo) {
+            query += ' WHERE tipo = $1';
+            params.push(tipo);
+        }
+        query += ' ORDER BY created_at ASC';
+        const result = await pool.query(query, params);
+        return result.rows;
+    },
+
+    async createCategoria(data) {
+        await configuracionService.ensureCategoriasTable();
+        const result = await pool.query(
+            'INSERT INTO categorias (nombre, tipo) VALUES ($1, $2) RETURNING *',
+            [data.nombre, data.tipo]
+        );
+        return result.rows[0];
+    },
+
+    async deleteCategoria(id) {
+        await configuracionService.ensureCategoriasTable();
+        await pool.query('DELETE FROM categorias WHERE id = $1', [id]);
+        return true;
     }
 };
 

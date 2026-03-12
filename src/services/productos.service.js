@@ -86,7 +86,7 @@ const productosService = {
        RETURNING *`,
             [
                 codigo, nombre, descripcion || null, categoria, subcategoria_id || null,
-                tipo_venta, lote_id || null, costo_base, imagenes ? JSON.stringify(imagenes) : null,
+                tipo_venta, lote_id || null, costo_base, imagenes && imagenes.length ? JSON.stringify(imagenes) : '[]',
                 premium || false
             ]
         );
@@ -131,6 +131,24 @@ const productosService = {
 
         if (result.rows.length === 0) {
             const error = new Error('Producto no encontrado');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        return result.rows[0];
+    },
+
+    /**
+     * Eliminar un producto.
+     */
+    async delete(id) {
+        const result = await pool.query(
+            'DELETE FROM productos WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            const error = new Error('Producto no encontrado para eliminar');
             error.statusCode = 404;
             throw error;
         }
