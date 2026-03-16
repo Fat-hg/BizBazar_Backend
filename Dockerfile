@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 3001
 
 # Comando para iniciar la aplicación
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
