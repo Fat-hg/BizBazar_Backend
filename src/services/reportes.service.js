@@ -4,12 +4,12 @@ const reportesService = {
     /**
      * Reporte diario para una fecha específica.
      */
-    async getDiario(fecha) {
+    async getDiario(fecha, usuario_id) {
         const [ventasDia, gananciasDia, productosMasVendidos, ventasDetalle] = await Promise.all([
             // Total de ventas del día
             pool.query(
-                "SELECT COUNT(*)::int as total_ventas, COALESCE(SUM(total_venta), 0)::numeric as total_ingresos, COALESCE(SUM(ganancia_total), 0)::numeric as total_ganancia FROM ventas WHERE fecha::date = $1",
-                [fecha]
+                "SELECT COUNT(*)::int as total_ventas, COALESCE(SUM(total_venta), 0)::numeric as total_ingresos, COALESCE(SUM(ganancia_total), 0)::numeric as total_ganancia FROM ventas WHERE fecha::date = $1 AND usuario_id = $2",
+                [fecha, usuario_id]
             ),
 
             // Ganancias por categoría
@@ -21,9 +21,9 @@ const reportesService = {
          FROM venta_items vi
          JOIN productos p ON vi.producto_id = p.id
          JOIN ventas v ON vi.venta_id = v.id
-         WHERE v.fecha::date = $1
+         WHERE v.fecha::date = $1 AND v.usuario_id = $2
          GROUP BY p.categoria`,
-                [fecha]
+                [fecha, usuario_id]
             ),
 
             // Productos más vendidos del día
@@ -32,10 +32,10 @@ const reportesService = {
          FROM venta_items vi
          JOIN productos p ON vi.producto_id = p.id
          JOIN ventas v ON vi.venta_id = v.id
-         WHERE v.fecha::date = $1
+         WHERE v.fecha::date = $1 AND v.usuario_id = $2
          ORDER BY vi.precio_venta DESC
          LIMIT 5`,
-                [fecha]
+                [fecha, usuario_id]
             ),
 
             // Detalle de ventas del día
@@ -51,10 +51,10 @@ const reportesService = {
          FROM ventas v
          LEFT JOIN venta_items vi ON v.id = vi.venta_id
          LEFT JOIN productos p ON vi.producto_id = p.id
-         WHERE v.fecha::date = $1
+         WHERE v.fecha::date = $1 AND v.usuario_id = $2
          GROUP BY v.id
          ORDER BY v.created_at DESC`,
-                [fecha]
+                [fecha, usuario_id]
             ),
         ]);
 
@@ -74,7 +74,7 @@ const reportesService = {
     /**
      * Reporte de inventario actual.
      */
-    async getInventario() {
+    async getInventario(usuario_id) {
         const [resumenGeneral, porCategoria, porEstado, lotesResumen] = await Promise.all([
             // Resumen general
             pool.query(`
@@ -85,7 +85,8 @@ const reportesService = {
           COUNT(*) FILTER (WHERE estado = 'en_subasta')::int as en_subasta,
           COALESCE(SUM(costo_base) FILTER (WHERE estado = 'disponible'), 0)::numeric as valor_inventario
         FROM productos
-      `),
+        WHERE usuario_id = $1
+      `, [usuario_id]),
 
             // Por categoría
             pool.query(`
@@ -95,16 +96,18 @@ const reportesService = {
                COUNT(*) FILTER (WHERE estado = 'vendido')::int as vendidos,
                COALESCE(SUM(costo_base) FILTER (WHERE estado = 'disponible'), 0)::numeric as valor_disponible
         FROM productos
+        WHERE usuario_id = $1
         GROUP BY categoria
-      `),
+      `, [usuario_id]),
 
             // Por estado
             pool.query(`
         SELECT estado, COUNT(*)::int as cantidad
         FROM productos
+        WHERE usuario_id = $1
         GROUP BY estado
         ORDER BY cantidad DESC
-      `),
+      `, [usuario_id]),
 
             // Resumen de lotes
             pool.query(`
@@ -114,9 +117,10 @@ const reportesService = {
                COUNT(p.id) FILTER (WHERE p.estado = 'vendido')::int as productos_vendidos
         FROM lotes l
         LEFT JOIN productos p ON l.id = p.lote_id
+        WHERE l.usuario_id = $1
         GROUP BY l.id
         ORDER BY l.created_at DESC
-      `),
+      `, [usuario_id]),
         ]);
 
         return {

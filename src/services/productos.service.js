@@ -4,7 +4,7 @@ const productosService = {
     /**
      * Listar productos con filtros opcionales.
      */
-    async getAll({ categoria, estado, search }) {
+    async getAll({ categoria, estado, search }, usuario_id) {
         let query = `
       SELECT p.*, 
              s.nombre as subcategoria_nombre,
@@ -13,10 +13,10 @@ const productosService = {
       FROM productos p
       LEFT JOIN subcategorias s ON p.subcategoria_id = s.id
       LEFT JOIN lotes l ON p.lote_id = l.id
-      WHERE 1=1
+      WHERE p.usuario_id = $1
     `;
-        const params = [];
-        let paramIndex = 1;
+        const params = [usuario_id];
+        let paramIndex = 2;
 
         if (categoria) {
             query += ` AND p.categoria = $${paramIndex++}`;
@@ -42,7 +42,7 @@ const productosService = {
     /**
      * Obtener producto por ID con detalle completo.
      */
-    async getById(id) {
+    async getById(id, usuario_id) {
         const result = await pool.query(
             `SELECT p.*, 
               s.nombre as subcategoria_nombre,
@@ -51,8 +51,8 @@ const productosService = {
        FROM productos p
        LEFT JOIN subcategorias s ON p.subcategoria_id = s.id
        LEFT JOIN lotes l ON p.lote_id = l.id
-       WHERE p.id = $1`,
-            [id]
+       WHERE p.id = $1 AND p.usuario_id = $2`,
+            [id, usuario_id]
         );
 
         if (result.rows.length === 0) {
@@ -70,7 +70,7 @@ const productosService = {
     async create(data) {
         const {
             codigo, nombre, descripcion, categoria, subcategoria_id,
-            tipo_venta, lote_id, costo_base, imagenes, premium
+            tipo_venta, lote_id, costo_base, imagenes, premium, usuario_id
         } = data;
 
         // Validar constraint: si categoria=ropa entonces lote_id requerido
@@ -81,11 +81,11 @@ const productosService = {
         }
 
         const result = await pool.query(
-            `INSERT INTO productos (codigo, nombre, descripcion, categoria, subcategoria_id, tipo_venta, lote_id, costo_base, imagenes, premium)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `INSERT INTO productos (usuario_id, codigo, nombre, descripcion, categoria, subcategoria_id, tipo_venta, lote_id, costo_base, imagenes, premium)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
             [
-                codigo, nombre, descripcion || null, categoria, subcategoria_id || null,
+                usuario_id, codigo, nombre, descripcion || null, categoria, subcategoria_id || null,
                 tipo_venta, lote_id || null, costo_base, imagenes && imagenes.length ? JSON.stringify(imagenes) : '[]',
                 premium || false
             ]
@@ -97,7 +97,7 @@ const productosService = {
     /**
      * Actualizar un producto existente.
      */
-    async update(id, data) {
+    async update(id, data, usuario_id) {
         const allowedFields = ['nombre', 'descripcion', 'categoria', 'subcategoria_id', 'tipo_venta', 'lote_id', 'costo_base', 'estado', 'imagenes', 'premium'];
         const fields = [];
         const values = [];
@@ -122,10 +122,14 @@ const productosService = {
         }
 
         fields.push(`updated_at = NOW()`);
+        
         values.push(id);
+        const idIndex = paramIndex++;
+        values.push(usuario_id);
+        const userIndex = paramIndex++;
 
         const result = await pool.query(
-            `UPDATE productos SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+            `UPDATE productos SET ${fields.join(', ')} WHERE id = $${idIndex} AND usuario_id = $${userIndex} RETURNING *`,
             values
         );
 
@@ -141,10 +145,10 @@ const productosService = {
     /**
      * Eliminar un producto.
      */
-    async delete(id) {
+    async delete(id, usuario_id) {
         const result = await pool.query(
-            'DELETE FROM productos WHERE id = $1 RETURNING *',
-            [id]
+            'DELETE FROM productos WHERE id = $1 AND usuario_id = $2 RETURNING *',
+            [id, usuario_id]
         );
 
         if (result.rows.length === 0) {

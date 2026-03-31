@@ -3,7 +3,7 @@ const ventasService = require('../services/ventas.service');
 const ventasController = {
     async getAll(req, res, next) {
         try {
-            const ventas = await ventasService.getAll();
+            const ventas = await ventasService.getAll(req.user.id);
             res.json({ success: true, data: ventas });
         } catch (error) {
             next(error);
@@ -12,7 +12,7 @@ const ventasController = {
 
     async getById(req, res, next) {
         try {
-            const venta = await ventasService.getById(req.params.id);
+            const venta = await ventasService.getById(req.params.id, req.user.id);
             res.json({ success: true, data: venta });
         } catch (error) {
             next(error);
@@ -39,7 +39,7 @@ const ventasController = {
                 }
             }
 
-            const venta = await ventasService.create(req.body);
+            const venta = await ventasService.create({ ...req.body, usuario_id: req.user.id });
             res.status(201).json({ success: true, data: venta });
         } catch (error) {
             next(error);

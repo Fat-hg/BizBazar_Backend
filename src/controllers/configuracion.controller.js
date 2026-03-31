@@ -3,7 +3,7 @@ const configuracionService = require('../services/configuracion.service');
 const configuracionController = {
     async getNegocio(req, res, next) {
         try {
-            const negocio = await configuracionService.getNegocio();
+            const negocio = await configuracionService.getNegocio(req.user.id);
             res.json({ success: true, data: negocio });
         } catch (error) {
             next(error);
@@ -12,7 +12,7 @@ const configuracionController = {
 
     async updateNegocio(req, res, next) {
         try {
-            const negocio = await configuracionService.updateNegocio(req.body);
+            const negocio = await configuracionService.updateNegocio(req.body, req.user.id);
             res.json({ success: true, data: negocio });
         } catch (error) {
             next(error);
@@ -22,7 +22,7 @@ const configuracionController = {
     async getCategorias(req, res, next) {
         try {
             const tipo = req.query.tipo;
-            const categorias = await configuracionService.getCategorias(tipo);
+            const categorias = await configuracionService.getCategorias(tipo, req.user.id);
             res.json({ success: true, data: categorias });
         } catch (error) {
             next(error);
@@ -31,7 +31,7 @@ const configuracionController = {
 
     async createCategoria(req, res, next) {
         try {
-            const categoria = await configuracionService.createCategoria(req.body);
+            const categoria = await configuracionService.createCategoria(req.body, req.user.id);
             res.status(201).json({ success: true, data: categoria });
         } catch (error) {
             next(error);
@@ -40,7 +40,7 @@ const configuracionController = {
 
     async deleteCategoria(req, res, next) {
         try {
-            await configuracionService.deleteCategoria(req.params.id);
+            await configuracionService.deleteCategoria(req.params.id, req.user.id);
             res.json({ success: true });
         } catch (error) {
             next(error);
@@ -49,7 +49,7 @@ const configuracionController = {
 
     async getAjustes(req, res, next) {
         try {
-            const negocio = await configuracionService.getNegocio();
+            const negocio = await configuracionService.getNegocio(req.user.id);
             res.json({
                 success: true,
                 data: {
@@ -70,7 +70,7 @@ const configuracionController = {
                 moneda: req.body.moneda,
                 formato_codigo: req.body.formatoCodigos
             };
-            const negocio = await configuracionService.updateNegocio(updates);
+            const negocio = await configuracionService.updateNegocio(updates, req.user.id);
             res.json({
                 success: true,
                 data: {

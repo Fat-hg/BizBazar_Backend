@@ -4,7 +4,7 @@ const lotesController = {
     async getAll(req, res, next) {
         try {
             const { estado } = req.query;
-            const lotes = await lotesService.getAll(estado);
+            const lotes = await lotesService.getAll(estado, req.user.id);
             res.json({ success: true, data: lotes });
         } catch (error) {
             next(error);
@@ -13,7 +13,7 @@ const lotesController = {
 
     async getById(req, res, next) {
         try {
-            const lote = await lotesService.getById(req.params.id);
+            const lote = await lotesService.getById(req.params.id, req.user.id);
             res.json({ success: true, data: lote });
         } catch (error) {
             next(error);
@@ -31,7 +31,7 @@ const lotesController = {
                 });
             }
 
-            const lote = await lotesService.create(req.body);
+            const lote = await lotesService.create({ ...req.body, usuario_id: req.user.id });
             res.status(201).json({ success: true, data: lote });
         } catch (error) {
             next(error);
@@ -40,7 +40,7 @@ const lotesController = {
 
     async update(req, res, next) {
         try {
-            const lote = await lotesService.update(req.params.id, req.body);
+            const lote = await lotesService.update(req.params.id, req.body, req.user.id);
             res.json({ success: true, data: lote });
         } catch (error) {
             next(error);

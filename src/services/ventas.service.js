@@ -5,7 +5,7 @@ const ventasService = {
     /**
      * Listar todas las ventas con sus items.
      */
-    async getAll() {
+    async getAll(usuario_id) {
         const ventasResult = await pool.query(`
       SELECT v.*,
              json_agg(
@@ -22,9 +22,10 @@ const ventasService = {
       FROM ventas v
       LEFT JOIN venta_items vi ON v.id = vi.venta_id
       LEFT JOIN productos p ON vi.producto_id = p.id
+      WHERE v.usuario_id = $1
       GROUP BY v.id
       ORDER BY v.created_at DESC
-    `);
+    `, [usuario_id]);
 
         return ventasResult.rows;
     },
@@ -32,8 +33,8 @@ const ventasService = {
     /**
      * Obtener detalle de una venta por ID con todos sus items.
      */
-    async getById(id) {
-        const ventaResult = await pool.query('SELECT * FROM ventas WHERE id = $1', [id]);
+    async getById(id, usuario_id) {
+        const ventaResult = await pool.query('SELECT * FROM ventas WHERE id = $1 AND usuario_id = $2', [id, usuario_id]);
 
         if (ventaResult.rows.length === 0) {
             const error = new Error('Venta no encontrada');
@@ -69,7 +70,7 @@ const ventasService = {
      * 8. Commit transacción
      */
     async create(data) {
-        const { items, cliente_nombre } = data;
+        const { items, cliente_nombre, usuario_id } = data;
         const client = await pool.connect();
 
         try {
@@ -83,8 +84,8 @@ const ventasService = {
             for (const item of items) {
                 // 2a. Validar que producto existe y estado='disponible'
                 const productoResult = await client.query(
-                    'SELECT id, codigo, nombre, costo_base, estado, categoria, lote_id FROM productos WHERE id = $1 FOR UPDATE',
-                    [item.producto_id]
+                    'SELECT id, codigo, nombre, costo_base, estado, categoria, lote_id FROM productos WHERE id = $1 AND usuario_id = $2 FOR UPDATE',
+                    [item.producto_id, usuario_id]
                 );
 
                 if (productoResult.rows.length === 0) {
@@ -122,10 +123,10 @@ const ventasService = {
 
             // 4. Crear registro en tabla ventas
             const ventaResult = await client.query(
-                `INSERT INTO ventas (codigo, tipo, total_venta, ganancia_total, fecha, cliente_nombre)
-         VALUES ($1, $2, $3, $4, NOW(), $5)
+                `INSERT INTO ventas (usuario_id, codigo, tipo, total_venta, ganancia_total, fecha, cliente_nombre)
+         VALUES ($1, $2, $3, $4, $5, NOW(), $6)
          RETURNING *`,
-                [codigo, 'directa', totalVenta, gananciaTotal, cliente_nombre || null]
+                [usuario_id, codigo, 'directa', totalVenta, gananciaTotal, cliente_nombre || null]
             );
 
             const venta = ventaResult.rows[0];

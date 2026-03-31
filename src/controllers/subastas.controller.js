@@ -4,7 +4,7 @@ const subastasController = {
     async getAll(req, res, next) {
         try {
             const { estado } = req.query;
-            const subastas = await subastasService.getAll(estado);
+            const subastas = await subastasService.getAll(estado, req.user.id);
             res.json({ success: true, data: subastas });
         } catch (error) {
             next(error);
@@ -22,7 +22,7 @@ const subastasController = {
                 });
             }
 
-            const subasta = await subastasService.create(req.body);
+            const subasta = await subastasService.create({ ...req.body, usuario_id: req.user.id });
             res.status(201).json({ success: true, data: subasta });
         } catch (error) {
             next(error);
@@ -40,7 +40,7 @@ const subastasController = {
                 });
             }
 
-            const subasta = await subastasService.cerrar(req.params.id, req.body);
+            const subasta = await subastasService.cerrar(req.params.id, { ...req.body, usuario_id: req.user.id });
             res.json({ success: true, data: subasta });
         } catch (error) {
             next(error);

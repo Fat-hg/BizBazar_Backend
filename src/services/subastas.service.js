@@ -5,7 +5,7 @@ const subastasService = {
     /**
      * Listar subastas con filtro opcional de estado.
      */
-    async getAll(estado) {
+    async getAll(estado, usuario_id) {
         let query = `
       SELECT s.*, 
              p.nombre as producto_nombre, 
@@ -14,11 +14,13 @@ const subastasService = {
              p.imagenes as producto_imagenes
       FROM subastas s
       JOIN productos p ON s.producto_id = p.id
+      WHERE s.usuario_id = $1
     `;
-        const params = [];
+        const params = [usuario_id];
+        let paramIndex = 2;
 
         if (estado) {
-            query += ' WHERE s.estado = $1';
+            query += ` AND s.estado = $${paramIndex++}`;
             params.push(estado);
         }
 
@@ -33,7 +35,7 @@ const subastasService = {
      * - Cambia producto.estado = 'en_subasta'
      */
     async create(data) {
-        const { producto_id, precio_inicial, incremento_minimo } = data;
+        const { producto_id, precio_inicial, incremento_minimo, usuario_id } = data;
         const client = await pool.connect();
 
         try {
@@ -41,8 +43,8 @@ const subastasService = {
 
             // Validar producto existe y está disponible
             const productoResult = await client.query(
-                'SELECT id, nombre, estado FROM productos WHERE id = $1 FOR UPDATE',
-                [producto_id]
+                'SELECT id, nombre, estado FROM productos WHERE id = $1 AND usuario_id = $2 FOR UPDATE',
+                [producto_id, usuario_id]
             );
 
             if (productoResult.rows.length === 0) {
@@ -61,10 +63,10 @@ const subastasService = {
 
             // Crear subasta
             const subastaResult = await client.query(
-                `INSERT INTO subastas (codigo, producto_id, precio_inicial, incremento_minimo, estado, fecha_inicio)
-         VALUES ($1, $2, $3, $4, 'activa', NOW())
+                `INSERT INTO subastas (usuario_id, codigo, producto_id, precio_inicial, incremento_minimo, estado, fecha_inicio)
+         VALUES ($1, $2, $3, $4, $5, 'activa', NOW())
          RETURNING *`,
-                [codigo, producto_id, precio_inicial, incremento_minimo]
+                [usuario_id, codigo, producto_id, precio_inicial, incremento_minimo]
             );
 
             // Cambiar estado del producto a 'en_subasta'
@@ -95,7 +97,7 @@ const subastasService = {
      * 6. Si es ropa, actualizar lote.recuperado
      */
     async cerrar(id, data) {
-        const { precio_final, ganadora_nombre } = data;
+        const { precio_final, ganadora_nombre, usuario_id } = data;
         const client = await pool.connect();
 
         try {
@@ -103,8 +105,8 @@ const subastasService = {
 
             // Obtener la subasta
             const subastaResult = await client.query(
-                'SELECT s.*, p.costo_base, p.categoria, p.lote_id FROM subastas s JOIN productos p ON s.producto_id = p.id WHERE s.id = $1 FOR UPDATE',
-                [id]
+                'SELECT s.*, p.costo_base, p.categoria, p.lote_id FROM subastas s JOIN productos p ON s.producto_id = p.id WHERE s.id = $1 AND s.usuario_id = $2 FOR UPDATE',
+                [id, usuario_id]
             );
 
             if (subastaResult.rows.length === 0) {
@@ -132,10 +134,10 @@ const subastasService = {
             // 3. Crear venta automática tipo 'subasta'
             const codigoVenta = await getNext('V', 'ventas');
             const ventaResult = await client.query(
-                `INSERT INTO ventas (codigo, tipo, total_venta, ganancia_total, fecha, cliente_nombre)
-         VALUES ($1, 'subasta', $2, $3, NOW(), $4)
+                `INSERT INTO ventas (usuario_id, codigo, tipo, total_venta, ganancia_total, fecha, cliente_nombre)
+         VALUES ($1, $2, 'subasta', $3, $4, NOW(), $5)
          RETURNING *`,
-                [codigoVenta, precioFinal, ganancia, ganadora_nombre]
+                [usuario_id, codigoVenta, precioFinal, ganancia, ganadora_nombre]
             );
 
             const venta = ventaResult.rows[0];

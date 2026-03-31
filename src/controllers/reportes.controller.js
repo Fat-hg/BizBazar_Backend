@@ -20,7 +20,7 @@ const reportesController = {
                 });
             }
 
-            const reporte = await reportesService.getDiario(fecha);
+            const reporte = await reportesService.getDiario(fecha, req.user.id);
             res.json({ success: true, data: reporte });
         } catch (error) {
             next(error);
@@ -29,7 +29,7 @@ const reportesController = {
 
     async getInventario(req, res, next) {
         try {
-            const reporte = await reportesService.getInventario();
+            const reporte = await reportesService.getInventario(req.user.id);
             res.json({ success: true, data: reporte });
         } catch (error) {
             next(error);
