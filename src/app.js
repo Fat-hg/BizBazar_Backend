@@ -13,6 +13,7 @@ const reportesRoutes = require('./routes/reportes.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const benchmarkRoutes = require('./routes/benchmarking.routes');
 const joyeriaRoutes = require('./routes/joyeria.routes');
+const configuracionRoutes = require('./routes/configuracion.routes');
 
 const app = express();
 
