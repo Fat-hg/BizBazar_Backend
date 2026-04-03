@@ -49,12 +49,24 @@ const configuracionService = {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS categorias (
                 id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-                usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
                 nombre VARCHAR(100) NOT NULL,
                 tipo VARCHAR(50) NOT NULL,
                 created_at TIMESTAMP DEFAULT NOW()
             )
         `);
+
+        // Check if usuario_id column exists for multi-tenant isolation
+        const columnCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='categorias' AND column_name='usuario_id'
+        `);
+
+        if (columnCheck.rows.length === 0) {
+            // Delete existing rows since they don't belong to any user and the column needs NOT NULL constraint
+            await pool.query('TRUNCATE TABLE categorias');
+            await pool.query('ALTER TABLE categorias ADD COLUMN usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE');
+        }
     },
 
     async getCategorias(tipo, usuario_id) {
