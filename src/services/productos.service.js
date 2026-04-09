@@ -69,9 +69,18 @@ const productosService = {
      */
     async create(data) {
         if (data.subcategoria) {
-            const subResult = await pool.query("SELECT id FROM subcategorias WHERE nombre ILIKE $1 OR $1 ILIKE nombre || '%' LIMIT 1", [data.subcategoria]);
-            if (subResult.rows.length > 0) {
-                data.subcategoria_id = subResult.rows[0].id;
+            const allSubs = await pool.query("SELECT id, nombre FROM subcategorias");
+            const substr = data.subcategoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            
+            const match = allSubs.rows.find(row => {
+                const rowName = row.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                return substr.includes(rowName) || rowName.includes(substr) || substr === rowName || substr.startsWith(rowName);
+            });
+
+            if (match) {
+                data.subcategoria_id = match.id;
+            } else {
+                data.subcategoria_id = null;
             }
         }
 
@@ -106,9 +115,18 @@ const productosService = {
      */
     async update(id, data, usuario_id) {
         if (data.subcategoria) {
-            const subResult = await pool.query("SELECT id FROM subcategorias WHERE nombre ILIKE $1 OR $1 ILIKE nombre || '%' LIMIT 1", [data.subcategoria]);
-            if (subResult.rows.length > 0) {
-                data.subcategoria_id = subResult.rows[0].id;
+            const allSubs = await pool.query("SELECT id, nombre FROM subcategorias");
+            const substr = data.subcategoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            
+            const match = allSubs.rows.find(row => {
+                const rowName = row.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                return substr.includes(rowName) || rowName.includes(substr) || substr === rowName || substr.startsWith(rowName);
+            });
+
+            if (match) {
+                data.subcategoria_id = match.id;
+            } else {
+                data.subcategoria_id = null;
             }
         }
 
