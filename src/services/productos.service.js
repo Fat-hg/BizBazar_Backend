@@ -68,6 +68,13 @@ const productosService = {
      * Crear un nuevo producto.
      */
     async create(data) {
+        if (data.subcategoria) {
+            const subResult = await pool.query("SELECT id FROM subcategorias WHERE nombre ILIKE $1 OR $1 ILIKE nombre || '%' LIMIT 1", [data.subcategoria]);
+            if (subResult.rows.length > 0) {
+                data.subcategoria_id = subResult.rows[0].id;
+            }
+        }
+
         const {
             codigo, nombre, descripcion, categoria, subcategoria_id,
             tipo_venta, lote_id, costo_base, imagenes, premium, usuario_id
@@ -98,6 +105,13 @@ const productosService = {
      * Actualizar un producto existente.
      */
     async update(id, data, usuario_id) {
+        if (data.subcategoria) {
+            const subResult = await pool.query("SELECT id FROM subcategorias WHERE nombre ILIKE $1 OR $1 ILIKE nombre || '%' LIMIT 1", [data.subcategoria]);
+            if (subResult.rows.length > 0) {
+                data.subcategoria_id = subResult.rows[0].id;
+            }
+        }
+
         const allowedFields = ['nombre', 'descripcion', 'categoria', 'subcategoria_id', 'tipo_venta', 'lote_id', 'costo_base', 'estado', 'imagenes', 'premium'];
         const fields = [];
         const values = [];
