@@ -68,19 +68,14 @@ const productosService = {
      * Crear un nuevo producto.
      */
     async create(data) {
-        if (data.subcategoria) {
-            const allSubs = await pool.query("SELECT id, nombre FROM subcategorias");
-            const substr = data.subcategoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            
-            const match = allSubs.rows.find(row => {
-                const rowName = row.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                return substr.includes(rowName) || rowName.includes(substr) || substr === rowName || substr.startsWith(rowName);
-            });
-
-            if (match) {
-                data.subcategoria_id = match.id;
-            } else {
-                data.subcategoria_id = null;
+        if (data.subcategoria_id) {
+            try {
+                const check = await pool.query("SELECT id FROM subcategorias WHERE id = $1", [data.subcategoria_id]);
+                if (check.rows.length === 0) {
+                    data.subcategoria_id = null; // ID inválido o obsoleto
+                }
+            } catch (error) {
+                data.subcategoria_id = null; // Formato UUID inválido u otro error
             }
         }
 
@@ -114,18 +109,13 @@ const productosService = {
      * Actualizar un producto existente.
      */
     async update(id, data, usuario_id) {
-        if (data.subcategoria) {
-            const allSubs = await pool.query("SELECT id, nombre FROM subcategorias");
-            const substr = data.subcategoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            
-            const match = allSubs.rows.find(row => {
-                const rowName = row.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                return substr.includes(rowName) || rowName.includes(substr) || substr === rowName || substr.startsWith(rowName);
-            });
-
-            if (match) {
-                data.subcategoria_id = match.id;
-            } else {
+        if (data.subcategoria_id) {
+            try {
+                const check = await pool.query("SELECT id FROM subcategorias WHERE id = $1", [data.subcategoria_id]);
+                if (check.rows.length === 0) {
+                    data.subcategoria_id = null;
+                }
+            } catch (error) {
                 data.subcategoria_id = null;
             }
         }
