@@ -80,9 +80,8 @@ const ventasService = {
             let gananciaTotal = 0;
             const processedItems = [];
 
-            // 2. Procesar cada item
             for (const item of items) {
-                // 2a. Validar que producto existe y estado='disponible'
+
                 const productoResult = await client.query(
                     'SELECT id, codigo, nombre, costo_base, estado, categoria, lote_id FROM productos WHERE id = $1 AND usuario_id = $2 FOR UPDATE',
                     [item.producto_id, usuario_id]
@@ -98,11 +97,8 @@ const ventasService = {
                     throw Object.assign(new Error(`Producto "${producto.nombre}" no está disponible (estado: ${producto.estado})`), { statusCode: 400 });
                 }
 
-                // 2b. Obtener costo_base
                 const costoBase = parseFloat(producto.costo_base);
                 const precioVenta = parseFloat(item.precio_venta);
-
-                // 2c. Calcular ganancia
                 const ganancia = precioVenta - costoBase;
 
                 totalVenta += precioVenta;

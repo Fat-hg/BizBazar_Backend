@@ -28,7 +28,7 @@ const lotesService = {
         }
 
         const productosResult = await pool.query(
-            'SELECT p.*, s.nombre as subcategoria_nombre FROM productos p LEFT JOIN subcategorias s ON p.subcategoria_id = s.id WHERE p.lote_id = $1 AND p.usuario_id = $2 ORDER BY p.created_at DESC',
+            'SELECT p.*, s.nombre as subcategoria_nombre FROM productos p LEFT JOIN categorias s ON p.subcategoria_id = s.id WHERE p.lote_id = $1 AND p.usuario_id = $2 ORDER BY p.created_at DESC',
             [id, usuario_id]
         );
 

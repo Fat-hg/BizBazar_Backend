@@ -25,13 +25,12 @@ CREATE TABLE negocio (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE subcategorias (
+CREATE TABLE categorias (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('ropa', 'joyeria')),
-    nombre VARCHAR(60) NOT NULL,
-    activa BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE(tipo, nombre)
+    usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    nombre VARCHAR(100) NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE lotes (
@@ -58,7 +57,7 @@ CREATE TABLE productos (
     nombre VARCHAR(180) NOT NULL,
     descripcion TEXT,
     categoria VARCHAR(20) NOT NULL CHECK (categoria IN ('ropa', 'joyeria')),
-    subcategoria_id UUID REFERENCES subcategorias(id),
+    subcategoria_id UUID REFERENCES categorias(id),
     tipo_venta VARCHAR(20) NOT NULL CHECK (tipo_venta IN ('directa', 'subasta')),
     premium BOOLEAN NOT NULL DEFAULT FALSE,
     lote_id UUID REFERENCES lotes(id),
@@ -149,8 +148,5 @@ INSERT INTO usuarios (nombre, email, password_hash) VALUES
 -- El negocio ahora debe estar vinculado a un usuario, ejemplo:
 -- INSERT INTO negocio (usuario_id, nombre) VALUES ((SELECT id FROM usuarios LIMIT 1), 'BizBazar');
 
-INSERT INTO subcategorias (tipo, nombre) VALUES
-('ropa', 'Blusa'), ('ropa', 'Pantalón'), ('ropa', 'Short'), 
-('ropa', 'Vestido'), ('ropa', 'Falda'), ('ropa', 'Chamarra'),
-('joyeria', 'Collar'), ('joyeria', 'Pulsera'), ('joyeria', 'Arete'), 
-('joyeria', 'Anillo'), ('joyeria', 'Otro');
+-- Las categorías ahora son creadas dinámicamente por la API de configuración para cada usuario
+-- eliminando la necesidad de inserciones globales manuales aquí.

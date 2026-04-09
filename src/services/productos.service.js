@@ -11,7 +11,7 @@ const productosService = {
              l.nombre as lote_nombre,
              l.codigo as lote_codigo
       FROM productos p
-      LEFT JOIN subcategorias s ON p.subcategoria_id = s.id
+      LEFT JOIN categorias s ON p.subcategoria_id = s.id
       LEFT JOIN lotes l ON p.lote_id = l.id
       WHERE p.usuario_id = $1
     `;
@@ -49,7 +49,7 @@ const productosService = {
               l.nombre as lote_nombre,
               l.codigo as lote_codigo
        FROM productos p
-       LEFT JOIN subcategorias s ON p.subcategoria_id = s.id
+       LEFT JOIN categorias s ON p.subcategoria_id = s.id
        LEFT JOIN lotes l ON p.lote_id = l.id
        WHERE p.id = $1 AND p.usuario_id = $2`,
             [id, usuario_id]
@@ -68,17 +68,6 @@ const productosService = {
      * Crear un nuevo producto.
      */
     async create(data) {
-        if (data.subcategoria_id) {
-            try {
-                const check = await pool.query("SELECT id FROM subcategorias WHERE id = $1", [data.subcategoria_id]);
-                if (check.rows.length === 0) {
-                    data.subcategoria_id = null; // ID inválido o obsoleto
-                }
-            } catch (error) {
-                data.subcategoria_id = null; // Formato UUID inválido u otro error
-            }
-        }
-
         const {
             codigo, nombre, descripcion, categoria, subcategoria_id,
             tipo_venta, lote_id, costo_base, imagenes, premium, usuario_id
@@ -109,17 +98,6 @@ const productosService = {
      * Actualizar un producto existente.
      */
     async update(id, data, usuario_id) {
-        if (data.subcategoria_id) {
-            try {
-                const check = await pool.query("SELECT id FROM subcategorias WHERE id = $1", [data.subcategoria_id]);
-                if (check.rows.length === 0) {
-                    data.subcategoria_id = null;
-                }
-            } catch (error) {
-                data.subcategoria_id = null;
-            }
-        }
-
         const allowedFields = ['nombre', 'descripcion', 'categoria', 'subcategoria_id', 'tipo_venta', 'lote_id', 'costo_base', 'estado', 'imagenes', 'premium'];
         const fields = [];
         const values = [];
