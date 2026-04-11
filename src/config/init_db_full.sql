@@ -70,7 +70,7 @@ CREATE TABLE productos (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT ropa_requiere_lote CHECK (
         (categoria = 'ropa' AND lote_id IS NOT NULL) OR
-        (categoria = 'joyeria' AND lote_id IS NULL)
+        (categoria != 'ropa')
     )
 );
 
