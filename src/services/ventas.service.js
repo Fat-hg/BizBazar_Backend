@@ -93,8 +93,8 @@ const ventasService = {
 
                 const producto = productoResult.rows[0];
 
-                if (producto.estado !== 'disponible') {
-                    throw Object.assign(new Error(`Producto "${producto.nombre}" no está disponible (estado: ${producto.estado})`), { statusCode: 400 });
+                if (producto.estado !== 'disponible' && producto.estado !== 'en_subasta') {
+                    throw Object.assign(new Error(`Producto "${producto.nombre}" no está disponible ni en subasta (estado: ${producto.estado})`), { statusCode: 400 });
                 }
 
                 const costoBase = parseFloat(producto.costo_base);
