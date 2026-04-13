@@ -146,6 +146,11 @@ const productosService = {
             premium || false
         ];
 
+        // Log para debug
+        const logger = require('../utils/logger');
+        logger.info(`Creando producto: categoria=${categoria}, lote_id=${lote_id}, costo_base=${costo_base}`);
+        logger.info(`Insert params: categoria=${insertParams[4]}, lote_id=${insertParams[7]}`);
+
         try {
             const result = await pool.query(
                 `INSERT INTO productos (usuario_id, codigo, nombre, descripcion, categoria, subcategoria_id, tipo_venta, lote_id, costo_base, imagenes, premium)
@@ -155,6 +160,16 @@ const productosService = {
             );
             return result.rows[0];
         } catch (err) {
+            logger.error(`Error al crear producto: ${err.message}`);
+            logger.error(`Datos enviados: ${JSON.stringify({ categoria, lote_id, subcategoria_id: validSubcatId, codigo, nombre })}`);
+            
+            // Si falla por constraint ropa_requiere_lote
+            if (err.message && err.message.includes('ropa_requiere_lote')) {
+                const error = new Error(`Error de constraint: categoria="${categoria}", lote_id="${lote_id}". Si la categoría es "ropa", se requiere un lote. Verifica que el frontend envía la categoría correcta.`);
+                error.statusCode = 400;
+                throw error;
+            }
+            
             // Si falla por FK de subcategoria, reintentar sin subcategoria_id
             if (err.message && err.message.includes('subcategoria_id')) {
                 insertParams[5] = null; // subcategoria_id = null
