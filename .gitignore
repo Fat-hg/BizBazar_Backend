@@ -1,3 +1,43 @@
+# ── Dependencias ───────────────────────────────────────────
 node_modules/
+
+# ── Variables de entorno y credenciales ────────────────────
 .env
+.env.*
+!.env.example
+
+# ── Logs ───────────────────────────────────────────────────
 *.log
+logs/
+
+# ── Archivos de artículo / documentación extra ─────────────
+generar_graficas.py
+generar_diagramas.py
+generar_er.py
+graficas_articulo/
+
+# ── Imágenes sueltas que no son del proyecto ───────────────
+src/config/image.png
+
+# ── Llaves y certificados ──────────────────────────────────
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+service-account*.json
+credentials*.json
+
+# ── Archivos de sistema operativo ──────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Archivos temporales de editores ────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Docker (solo ignorar override local) ───────────────────
+docker-compose.override.yml
