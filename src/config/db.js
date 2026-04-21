@@ -7,6 +7,10 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
+    connectionTimeoutMillis: 10000,  // 10s para obtener conexión
+    idleTimeoutMillis: 30000,        // 30s antes de cerrar conexión idle
+    query_timeout: 15000,            // 15s timeout por query
+    max: 20,                         // máximo de conexiones en el pool
 });
 
 pool.on('connect', () => {
